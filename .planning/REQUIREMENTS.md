@@ -9,9 +9,9 @@
 
 ### Plugin Foundation
 
-- [ ] **PFND-01**: Plugin registers with ComfyUI via `NODE_CLASS_MAPPINGS` and `NODE_DISPLAY_NAME_MAPPINGS` in `__init__.py`
-- [ ] **PFND-02**: All nodes appear under "Seedance 2.0" category in ComfyUI node menu
-- [ ] **PFND-03**: `requirements.txt` lists all dependencies (requests, opencv-python, Pillow)
+- [x] **PFND-01**: Plugin registers with ComfyUI via `NODE_CLASS_MAPPINGS` and `NODE_DISPLAY_NAME_MAPPINGS` in `__init__.py`
+- [x] **PFND-02**: All nodes appear under "Seedance 2.0" category in ComfyUI node menu
+- [x] **PFND-03**: `requirements.txt` lists all dependencies (requests, opencv-python, Pillow)
 - [ ] **PFND-04**: Plugin is installable via ComfyUI Manager "Install via Git URL"
 
 ### API Client
@@ -89,9 +89,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PFND-01 | Phase 1 | Pending |
-| PFND-02 | Phase 1 | Pending |
-| PFND-03 | Phase 1 | Pending |
+| PFND-01 | Phase 1 | Complete |
+| PFND-02 | Phase 1 | Complete |
+| PFND-03 | Phase 1 | Complete |
 | PFND-04 | Phase 4 | Pending |
 | APIC-01 | Phase 1 | Pending |
 | APIC-02 | Phase 1 | Pending |
