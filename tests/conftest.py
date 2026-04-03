@@ -44,6 +44,16 @@ def mock_i2v_response():
 
 
 @pytest.fixture
+def mock_extend_response():
+    """Return a dict mimicking a completed Extend AIHubMix API response."""
+    return {
+        "id": "vid_ext_test",
+        "status": "completed",
+        "video_url": "https://example.com/extend_video.mp4",
+    }
+
+
+@pytest.fixture
 def mock_failed_response():
     """Return a dict mimicking a failed AIHubMix API response."""
     return {

@@ -6,9 +6,11 @@ import requests
 from api_client import (
     create_video,
     create_i2v_video,
+    create_extend_video,
     wait_for_video,
     create_and_wait,
     create_and_wait_i2v,
+    create_and_wait_extend,
     _check_response,
     SIZE_MAP,
     MODEL,
@@ -342,3 +344,117 @@ class TestCreateAndWaitI2V:
         create_and_wait_i2v("key", "prompt", "data:image/...", duration=10, resolution="720p", ratio="9:16")
 
         mock_create_i2v.assert_called_once_with("key", "prompt", "data:image/...", 10, "720p", "9:16")
+
+
+class TestCreateExtendVideo:
+    """Tests for the create_extend_video function."""
+
+    @patch("api_client.requests.post")
+    def test_extend_payload_has_request_id(self, mock_post):
+        """create_extend_video() sends payload with 'request_id' field containing the source video_id."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_ext_test"}
+        mock_post.return_value = mock_resp
+
+        create_extend_video("key", "vid_orig", "continue the scene")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["request_id"] == "vid_orig"
+
+    @patch("api_client.requests.post")
+    def test_extend_model_id(self, mock_post):
+        """create_extend_video() sends payload with correct model identifier."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_ext_test"}
+        mock_post.return_value = mock_resp
+
+        create_extend_video("key", "vid_orig", "continue the scene")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["model"] == "doubao-seedance-2-0-260128"
+
+    @patch("api_client.requests.post")
+    def test_extend_returns_video_id(self, mock_post):
+        """create_extend_video() returns video_id string from response."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_ext_test"}
+        mock_post.return_value = mock_resp
+
+        result = create_extend_video("key", "vid_orig", "continue the scene")
+
+        assert result == "vid_ext_test"
+
+    @patch("api_client.requests.post")
+    def test_extend_size_720p(self, mock_post):
+        """create_extend_video() with resolution='720p' ratio='16:9' includes size='1280x720'."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_ext_test"}
+        mock_post.return_value = mock_resp
+
+        create_extend_video("key", "vid_orig", "prompt", resolution="720p", ratio="16:9")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["size"] == "1280x720"
+
+    @patch("api_client.requests.post")
+    def test_extend_size_1080p_omitted(self, mock_post):
+        """create_extend_video() with resolution='1080p' does NOT include 'size' in payload."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_ext_test"}
+        mock_post.return_value = mock_resp
+
+        create_extend_video("key", "vid_orig", "prompt", resolution="1080p")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert "size" not in call_json
+
+    @patch("api_client.requests.post")
+    def test_extend_empty_prompt(self, mock_post):
+        """create_extend_video() works when prompt is empty string."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_ext_test"}
+        mock_post.return_value = mock_resp
+
+        result = create_extend_video("key", "vid_orig", "")
+
+        assert result == "vid_ext_test"
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["prompt"] == ""
+
+
+class TestCreateAndWaitExtend:
+    """Tests for the create_and_wait_extend orchestration function."""
+
+    @patch("api_client.wait_for_video")
+    @patch("api_client.create_extend_video")
+    def test_orchestrates_correctly(self, mock_create_extend, mock_wait):
+        """create_and_wait_extend() orchestrates create_extend_video + wait_for_video correctly."""
+        mock_create_extend.return_value = "vid_ext_1"
+        mock_wait.return_value = {
+            "status": "completed",
+            "video_url": "https://example.com/extend.mp4",
+        }
+
+        result = create_and_wait_extend("key", "vid_orig", "continue")
+
+        assert result == {"video_url": "https://example.com/extend.mp4", "video_id": "vid_ext_1"}
+
+    @patch("api_client.wait_for_video")
+    @patch("api_client.create_extend_video")
+    def test_passes_all_params(self, mock_create_extend, mock_wait):
+        """create_and_wait_extend() passes all params to create_extend_video."""
+        mock_create_extend.return_value = "vid_ext_2"
+        mock_wait.return_value = {
+            "status": "completed",
+            "video_url": "https://example.com/extend2.mp4",
+        }
+
+        create_and_wait_extend("key", "vid_orig", "more", duration=10, resolution="720p", ratio="9:16")
+
+        mock_create_extend.assert_called_once_with("key", "vid_orig", "more", 10, "720p", "9:16")
