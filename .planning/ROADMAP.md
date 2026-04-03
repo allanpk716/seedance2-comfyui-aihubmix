@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md -- Plugin scaffold with __init__.py registration, requirements.txt, test infrastructure
 - [x] 01-02-PLAN.md -- AIHubMix API client module with create, poll, error handling (mocked tests)
-- [ ] 01-03-PLAN.md -- API Key node and Text-to-Video node with all parameters (TDD)
+- [x] 01-03-PLAN.md -- API Key node and Text-to-Video node with all parameters (TDD)
 
 ### Phase 2: Image-to-Video + Video Saver
 **Goal**: Users can generate videos from reference images and download/preview the results as ComfyUI tensors

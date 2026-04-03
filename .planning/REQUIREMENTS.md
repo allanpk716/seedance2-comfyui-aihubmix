@@ -24,16 +24,16 @@
 
 ### API Key Management
 
-- [ ] **KEYM-01**: Dedicated API Key node accepts STRING input and passes to generation nodes
-- [ ] **KEYM-02**: Each generation node has optional `api_key` field as fallback when not wired from Key node
-- [ ] **KEYM-03**: Missing API key produces clear error message with instructions
+- [x] **KEYM-01**: Dedicated API Key node accepts STRING input and passes to generation nodes
+- [x] **KEYM-02**: Each generation node has optional `api_key` field as fallback when not wired from Key node
+- [x] **KEYM-03**: Missing API key produces clear error message with instructions
 
 ### Text-to-Video
 
-- [ ] **T2V-01**: User provides text prompt to generate video via AIHubMix T2V
-- [ ] **T2V-02**: User can select resolution (480p, 720p, 1080p) and aspect ratio (16:9, 9:16, 4:3, 3:4, 1:1, 21:9)
-- [ ] **T2V-03**: User can set video duration (4-15 seconds, default 5)
-- [ ] **T2V-04**: Node outputs video_url (STRING), first_frame (IMAGE), video_id (STRING)
+- [x] **T2V-01**: User provides text prompt to generate video via AIHubMix T2V
+- [x] **T2V-02**: User can select resolution (480p, 720p, 1080p) and aspect ratio (16:9, 9:16, 4:3, 3:4, 1:1, 21:9)
+- [x] **T2V-03**: User can set video duration (4-15 seconds, default 5)
+- [x] **T2V-04**: Node outputs video_url (STRING), first_frame (IMAGE), video_id (STRING)
 
 ### Image-to-Video
 
@@ -98,13 +98,13 @@
 | APIC-03 | Phase 1 | Complete |
 | APIC-04 | Phase 1 | Complete |
 | APIC-05 | Phase 1 | Complete |
-| KEYM-01 | Phase 1 | Pending |
-| KEYM-02 | Phase 1 | Pending |
-| KEYM-03 | Phase 1 | Pending |
-| T2V-01 | Phase 1 | Pending |
-| T2V-02 | Phase 1 | Pending |
-| T2V-03 | Phase 1 | Pending |
-| T2V-04 | Phase 1 | Pending |
+| KEYM-01 | Phase 1 | Complete |
+| KEYM-02 | Phase 1 | Complete |
+| KEYM-03 | Phase 1 | Complete |
+| T2V-01 | Phase 1 | Complete |
+| T2V-02 | Phase 1 | Complete |
+| T2V-03 | Phase 1 | Complete |
+| T2V-04 | Phase 1 | Complete |
 | I2V-01 | Phase 2 | Pending |
 | I2V-02 | Phase 2 | Pending |
 | I2V-03 | Phase 2 | Pending |
