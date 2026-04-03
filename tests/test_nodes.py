@@ -138,7 +138,7 @@ class TestSeedanceTextToVideo:
         with pytest.raises(ValueError, match="(?i)api.key|aihubmix"):
             node.generate(prompt="test", api_key="")
 
-    @patch("seedance_comfyui.api_client.create_and_wait")
+    @patch("seedance_comfyui.nodes.create_and_wait")
     def test_t2v_calls_create_and_wait(self, mock_create_and_wait):
         """T2V node calls create_and_wait with correct args, returns (video_url, video_id)."""
         from seedance_comfyui.nodes import SeedanceTextToVideo
@@ -162,7 +162,7 @@ class TestSeedanceTextToVideo:
         )
         assert result == ("https://example.com/v.mp4", "vid_123")
 
-    @patch("seedance_comfyui.api_client.create_and_wait")
+    @patch("seedance_comfyui.nodes.create_and_wait")
     def test_t2v_size_options(self, mock_create_and_wait):
         """T2V node passes resolution and ratio through to create_and_wait."""
         from seedance_comfyui.nodes import SeedanceTextToVideo
