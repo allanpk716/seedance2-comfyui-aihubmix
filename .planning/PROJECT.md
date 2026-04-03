@@ -69,6 +69,7 @@ Users can generate Seedance 2.0 AI videos directly inside ComfyUI by entering th
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
+| Fork and modify seedance2-comfyui | API 层虽不同但 ComfyUI 节点框架可直接复用；比从零实现更快更稳 | — Pending |
 | Use AIHubMix API exclusively | User's service provider; clean single-provider implementation | — Pending |
 | API key via node input only | Simplest UX for v1; no config file management needed | — Pending |
 | Base reference project structure | Proven ComfyUI node pattern; easy to adapt | — Pending |
