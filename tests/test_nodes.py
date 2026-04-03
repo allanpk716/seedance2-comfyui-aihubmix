@@ -185,3 +185,153 @@ class TestSeedanceTextToVideo:
             "key456", "a dog", 10, "720p", "9:16"
         )
         assert result == ("https://example.com/v2.mp4", "vid_456")
+
+
+class TestSeedanceImageToVideo:
+    """Tests for the SeedanceImageToVideo node class."""
+
+    def test_i2v_image_required(self):
+        """SeedanceImageToVideo.INPUT_TYPES()['required'] contains 'image' as IMAGE type."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        result = SeedanceImageToVideo.INPUT_TYPES()
+        assert "required" in result
+        assert "image" in result["required"]
+        assert result["required"]["image"][0] == "IMAGE"
+
+    def test_i2v_prompt_required(self):
+        """SeedanceImageToVideo.INPUT_TYPES()['required'] contains 'prompt' as multiline STRING."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        result = SeedanceImageToVideo.INPUT_TYPES()
+        assert "prompt" in result["required"]
+        assert result["required"]["prompt"][0] == "STRING"
+        config = result["required"]["prompt"][1]
+        assert config.get("multiline") is True
+
+    def test_i2v_optional_fields(self):
+        """SeedanceImageToVideo optional fields match T2V pattern."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        result = SeedanceImageToVideo.INPUT_TYPES()
+        assert "optional" in result
+        assert result["optional"]["api_key"][0] == "STRING"
+        duration = result["optional"]["duration"]
+        assert duration[0] == "INT"
+        assert duration[1]["default"] == 5
+        assert duration[1]["min"] == 4
+        assert duration[1]["max"] == 15
+        resolution = result["optional"]["resolution"]
+        assert "1080p" in resolution[0]
+        ratio = result["optional"]["ratio"]
+        assert "16:9" in ratio[0]
+
+    def test_i2v_output_types(self):
+        """SeedanceImageToVideo.RETURN_TYPES == ('STRING', 'STRING') per D-10."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        assert SeedanceImageToVideo.RETURN_TYPES == ("STRING", "STRING")
+
+    def test_i2v_output_names(self):
+        """SeedanceImageToVideo.RETURN_NAMES == ('video_url', 'video_id') per D-10."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        assert SeedanceImageToVideo.RETURN_NAMES == ("video_url", "video_id")
+
+    def test_i2v_function(self):
+        """SeedanceImageToVideo.FUNCTION == 'generate'."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        assert SeedanceImageToVideo.FUNCTION == "generate"
+
+    def test_i2v_category(self):
+        """SeedanceImageToVideo.CATEGORY == 'Seedance 2.0'."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        assert SeedanceImageToVideo.CATEGORY == "Seedance 2.0"
+
+    def test_i2v_output_node(self):
+        """SeedanceImageToVideo.OUTPUT_NODE == False."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        assert SeedanceImageToVideo.OUTPUT_NODE is False
+
+    def test_i2v_missing_key_error(self):
+        """Missing API key raises ValueError with aihubmix guidance."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        import torch
+        node = SeedanceImageToVideo()
+        fake_image = torch.rand(1, 64, 64, 3)
+        with pytest.raises(ValueError, match="(?i)api.key|aihubmix"):
+            node.generate(image=fake_image, prompt="test", api_key="")
+
+    @patch("seedance_comfyui.nodes.create_and_wait_i2v")
+    def test_i2v_calls_create_and_wait_i2v(self, mock_create_and_wait_i2v):
+        """I2V node calls create_and_wait_i2v with correct args."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        import torch
+        mock_create_and_wait_i2v.return_value = {
+            "video_url": "https://example.com/i2v.mp4",
+            "video_id": "vid_i2v_123",
+        }
+
+        node = SeedanceImageToVideo()
+        fake_image = torch.rand(1, 64, 64, 3)
+        result = node.generate(
+            image=fake_image,
+            prompt="a cat sitting",
+            api_key="key123",
+            duration=5,
+            resolution="1080p",
+            ratio="16:9",
+        )
+
+        assert mock_create_and_wait_i2v.call_count == 1
+        call_args = mock_create_and_wait_i2v.call_args
+        assert call_args[0][0] == "key123"
+        assert call_args[0][1] == "a cat sitting"
+        assert call_args[0][2].startswith("data:image/jpeg;base64,")
+        assert call_args[0][3] == 5
+        assert call_args[0][4] == "1080p"
+        assert call_args[0][5] == "16:9"
+
+    @patch("seedance_comfyui.nodes.create_and_wait_i2v")
+    def test_i2v_tensor_to_data_uri(self, mock_create_and_wait_i2v):
+        """I2V node converts IMAGE tensor to base64 data URI starting with data:image/jpeg;base64,"""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        import torch
+        mock_create_and_wait_i2v.return_value = {
+            "video_url": "https://example.com/i2v.mp4",
+            "video_id": "vid_i2v_456",
+        }
+
+        node = SeedanceImageToVideo()
+        fake_image = torch.rand(1, 2, 2, 3)
+        node.generate(image=fake_image, prompt="test", api_key="key")
+
+        call_args = mock_create_and_wait_i2v.call_args[0]
+        data_uri = call_args[2]
+        assert data_uri.startswith("data:image/jpeg;base64,")
+        # Verify base64 content is non-empty
+        b64_part = data_uri.split(",", 1)[1]
+        assert len(b64_part) > 0
+
+    @patch("seedance_comfyui.nodes.create_and_wait_i2v")
+    def test_i2v_returns_tuple(self, mock_create_and_wait_i2v):
+        """I2V node returns (video_url, video_id) tuple."""
+        from seedance_comfyui.nodes import SeedanceImageToVideo
+
+        import torch
+        mock_create_and_wait_i2v.return_value = {
+            "video_url": "https://example.com/i2v.mp4",
+            "video_id": "vid_i2v_789",
+        }
+
+        node = SeedanceImageToVideo()
+        fake_image = torch.rand(1, 64, 64, 3)
+        result = node.generate(image=fake_image, prompt="test", api_key="key")
+
+        assert result == ("https://example.com/i2v.mp4", "vid_i2v_789")
