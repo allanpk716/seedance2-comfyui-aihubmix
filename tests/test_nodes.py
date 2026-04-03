@@ -1,5 +1,11 @@
 """Unit tests for SeedanceApiKey and SeedanceTextToVideo node classes."""
-from unittest.mock import patch
+import os
+import io
+
+import cv2
+import numpy as np
+import torch
+from unittest.mock import MagicMock, patch, mock_open
 
 import pytest
 
@@ -335,3 +341,250 @@ class TestSeedanceImageToVideo:
         result = node.generate(image=fake_image, prompt="test", api_key="key")
 
         assert result == ("https://example.com/i2v.mp4", "vid_i2v_789")
+
+
+class TestSeedanceSaveVideo:
+    """Tests for the SeedanceSaveVideo OUTPUT_NODE class."""
+
+    # --- Static attribute tests ---
+
+    def test_save_video_url_required(self):
+        """SeedanceSaveVideo INPUT_TYPES has video_url as required STRING."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        result = SeedanceSaveVideo.INPUT_TYPES()
+        assert "required" in result
+        assert "video_url" in result["required"]
+        assert result["required"]["video_url"][0] == "STRING"
+
+    def test_save_optional_fields(self):
+        """SeedanceSaveVideo optional fields: filename_prefix, subfolder, frame_load_cap."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        result = SeedanceSaveVideo.INPUT_TYPES()
+        assert "optional" in result
+
+        fp = result["optional"]["filename_prefix"]
+        assert fp[0] == "STRING"
+        assert fp[1]["default"] == "Seedance"
+
+        sf = result["optional"]["subfolder"]
+        assert sf[0] == "STRING"
+        assert sf[1]["default"] == ""
+
+        flc = result["optional"]["frame_load_cap"]
+        assert flc[0] == "INT"
+        assert flc[1]["default"] == 16
+        assert flc[1]["min"] == 1
+        assert flc[1]["max"] == 1000
+
+    def test_save_output_types(self):
+        """SeedanceSaveVideo.RETURN_TYPES == ('IMAGE', 'STRING', 'STRING') per D-12."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        assert SeedanceSaveVideo.RETURN_TYPES == ("IMAGE", "STRING", "STRING")
+
+    def test_save_output_names(self):
+        """SeedanceSaveVideo.RETURN_NAMES == ('frames', 'first_frame_path', 'video_path') per D-12."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        assert SeedanceSaveVideo.RETURN_NAMES == ("frames", "first_frame_path", "video_path")
+
+    def test_save_function(self):
+        """SeedanceSaveVideo.FUNCTION == 'save'."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        assert SeedanceSaveVideo.FUNCTION == "save"
+
+    def test_save_category(self):
+        """SeedanceSaveVideo.CATEGORY == 'Seedance 2.0'."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        assert SeedanceSaveVideo.CATEGORY == "Seedance 2.0"
+
+    def test_save_is_output_node(self):
+        """SeedanceSaveVideo.OUTPUT_NODE == True per D-12b."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        assert SeedanceSaveVideo.OUTPUT_NODE is True
+
+    def test_save_empty_url_error(self):
+        """Empty video_url raises ValueError with Chinese error message."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        node = SeedanceSaveVideo()
+        with pytest.raises(ValueError, match="视频|链接|不能为空"):
+            node.save(video_url="")
+
+    # --- Integration tests using fixtures ---
+
+    def test_save_downloads_video(self, mock_folder_paths, mock_video_bytes, tmp_path):
+        """save() downloads video from URL via requests.get(stream=True) and writes .mp4 file."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        # Mock requests.get to return our test video bytes as a streaming response
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_content = MagicMock(return_value=[mock_video_bytes])
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("seedance_comfyui.nodes.requests.get", return_value=mock_resp) as mock_get:
+            node = SeedanceSaveVideo()
+            result = node.save(video_url="https://example.com/video.mp4")
+
+            # Verify requests.get called with stream=True
+            mock_get.assert_called_once()
+            call_kwargs = mock_get.call_args
+            assert call_kwargs[1].get("stream") is True or (len(call_kwargs) > 1 and call_kwargs[1].get("stream") is True)
+
+            # Verify an .mp4 file was written to the output directory
+            output_dir = mock_folder_paths.get_output_directory()
+            mp4_files = [f for f in os.listdir(output_dir) if f.endswith(".mp4")]
+            assert len(mp4_files) >= 1
+
+    def test_save_extracts_frames(self, mock_folder_paths, mock_video_bytes, tmp_path):
+        """save() extracts frames as ComfyUI IMAGE tensor (N,H,W,C float32 [0,1])."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_content = MagicMock(return_value=[mock_video_bytes])
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("seedance_comfyui.nodes.requests.get", return_value=mock_resp):
+            node = SeedanceSaveVideo()
+            result = node.save(video_url="https://example.com/video.mp4")
+
+            frames = result["result"][0]
+            assert isinstance(frames, torch.Tensor)
+            assert frames.dtype == torch.float32
+            assert frames.dim() == 4  # (N, H, W, C)
+            assert frames.shape[0] <= 16  # frame_load_cap default
+            assert frames.shape[3] == 3  # RGB channels
+            assert frames.min() >= 0.0
+            assert frames.max() <= 1.0
+
+    def test_save_frame_load_cap(self, mock_folder_paths, mock_video_bytes, tmp_path):
+        """save() with frame_load_cap=2 extracts exactly 2 frames."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_content = MagicMock(return_value=[mock_video_bytes])
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("seedance_comfyui.nodes.requests.get", return_value=mock_resp):
+            node = SeedanceSaveVideo()
+            result = node.save(video_url="https://example.com/video.mp4", frame_load_cap=2)
+
+            frames = result["result"][0]
+            assert frames.shape[0] == 2
+
+    def test_save_first_frame_png(self, mock_folder_paths, mock_video_bytes, tmp_path):
+        """save() saves first frame as PNG and returns matching first_frame_path."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_content = MagicMock(return_value=[mock_video_bytes])
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("seedance_comfyui.nodes.requests.get", return_value=mock_resp):
+            node = SeedanceSaveVideo()
+            result = node.save(video_url="https://example.com/video.mp4")
+
+            first_frame_path = result["result"][1]
+            assert first_frame_path.endswith(".png")
+            assert os.path.exists(first_frame_path)
+
+    def test_save_ui_preview(self, mock_folder_paths, mock_video_bytes, tmp_path):
+        """save() returns dict with 'ui' key containing 'images' list per D-12c."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_content = MagicMock(return_value=[mock_video_bytes])
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("seedance_comfyui.nodes.requests.get", return_value=mock_resp):
+            node = SeedanceSaveVideo()
+            result = node.save(video_url="https://example.com/video.mp4")
+
+            assert "ui" in result
+            assert "images" in result["ui"]
+            images = result["ui"]["images"]
+            assert len(images) >= 1
+            assert images[0]["filename"].endswith(".mp4")
+            assert images[0]["type"] == "output"
+
+    def test_save_result_tuple(self, mock_folder_paths, mock_video_bytes, tmp_path):
+        """save() returns dict with 'result' key containing (frames, first_frame_path, video_path)."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_content = MagicMock(return_value=[mock_video_bytes])
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("seedance_comfyui.nodes.requests.get", return_value=mock_resp):
+            node = SeedanceSaveVideo()
+            result = node.save(video_url="https://example.com/video.mp4")
+
+            assert "result" in result
+            res = result["result"]
+            assert len(res) == 3
+            frames, first_frame_path, video_path = res
+            assert isinstance(frames, torch.Tensor)
+            assert isinstance(first_frame_path, str)
+            assert isinstance(video_path, str)
+            assert video_path.endswith(".mp4")
+
+    def test_save_custom_prefix(self, mock_folder_paths, mock_video_bytes, tmp_path):
+        """save() with filename_prefix='MyVideo' creates files starting with 'MyVideo_'."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_content = MagicMock(return_value=[mock_video_bytes])
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("seedance_comfyui.nodes.requests.get", return_value=mock_resp):
+            node = SeedanceSaveVideo()
+            result = node.save(video_url="https://example.com/video.mp4", filename_prefix="MyVideo")
+
+            video_path = result["result"][2]
+            basename = os.path.basename(video_path)
+            assert basename.startswith("MyVideo_")
+
+    def test_save_subfolder(self, mock_folder_paths, mock_video_bytes, tmp_path):
+        """save() with subfolder='test_sub' saves video in that subdirectory."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_content = MagicMock(return_value=[mock_video_bytes])
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("seedance_comfyui.nodes.requests.get", return_value=mock_resp):
+            node = SeedanceSaveVideo()
+            result = node.save(video_url="https://example.com/video.mp4", subfolder="test_sub")
+
+            video_path = result["result"][2]
+            assert "test_sub" in video_path
+            assert os.path.exists(video_path)
