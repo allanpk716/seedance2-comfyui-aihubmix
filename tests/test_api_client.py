@@ -5,8 +5,10 @@ import requests
 
 from api_client import (
     create_video,
+    create_i2v_video,
     wait_for_video,
     create_and_wait,
+    create_and_wait_i2v,
     _check_response,
     SIZE_MAP,
     MODEL,
@@ -240,3 +242,103 @@ class TestCreateAndWait:
         assert result["video_id"] == "video_xyz"
         mock_create.assert_called_once_with("test-key", "A test prompt", 5, "1080p", "16:9")
         mock_wait.assert_called_once_with("test-key", "video_xyz")
+
+
+class TestCreateI2VVideo:
+    """Tests for the create_i2v_video function."""
+
+    @patch("api_client.requests.post")
+    def test_i2v_payload_has_input(self, mock_post):
+        """create_i2v_video() sends payload with 'input' field containing image data URI."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_i2v_123"}
+        mock_post.return_value = mock_resp
+
+        create_i2v_video("key", "prompt", "data:image/jpeg;base64,abc")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["input"] == "data:image/jpeg;base64,abc"
+
+    @patch("api_client.requests.post")
+    def test_i2v_model_id(self, mock_post):
+        """create_i2v_video() sends payload with correct model identifier."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_i2v_123"}
+        mock_post.return_value = mock_resp
+
+        create_i2v_video("key", "prompt", "data:image/jpeg;base64,abc")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["model"] == "doubao-seedance-2-0-260128"
+
+    @patch("api_client.requests.post")
+    def test_i2v_returns_video_id(self, mock_post):
+        """create_i2v_video() returns video_id string from response."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_i2v_123"}
+        mock_post.return_value = mock_resp
+
+        result = create_i2v_video("key", "prompt", "data:image/jpeg;base64,abc")
+
+        assert result == "vid_i2v_123"
+
+    @patch("api_client.requests.post")
+    def test_i2v_size_720p(self, mock_post):
+        """create_i2v_video() with resolution='720p' ratio='16:9' includes size='1280x720'."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_i2v_123"}
+        mock_post.return_value = mock_resp
+
+        create_i2v_video("key", "prompt", "data:image/jpeg;base64,abc", resolution="720p", ratio="16:9")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["size"] == "1280x720"
+
+    @patch("api_client.requests.post")
+    def test_i2v_size_1080p_omitted(self, mock_post):
+        """create_i2v_video() with resolution='1080p' does NOT include 'size' in payload."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_i2v_123"}
+        mock_post.return_value = mock_resp
+
+        create_i2v_video("key", "prompt", "data:image/jpeg;base64,abc", resolution="1080p")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert "size" not in call_json
+
+
+class TestCreateAndWaitI2V:
+    """Tests for the create_and_wait_i2v orchestration function."""
+
+    @patch("api_client.wait_for_video")
+    @patch("api_client.create_i2v_video")
+    def test_orchestrates_correctly(self, mock_create_i2v, mock_wait):
+        """create_and_wait_i2v() orchestrates create_i2v_video + wait_for_video correctly."""
+        mock_create_i2v.return_value = "vid_1"
+        mock_wait.return_value = {
+            "status": "completed",
+            "video_url": "https://example.com/i2v.mp4",
+        }
+
+        result = create_and_wait_i2v("key", "prompt", "data:image/jpeg;base64,abc")
+
+        assert result == {"video_url": "https://example.com/i2v.mp4", "video_id": "vid_1"}
+
+    @patch("api_client.wait_for_video")
+    @patch("api_client.create_i2v_video")
+    def test_passes_all_params(self, mock_create_i2v, mock_wait):
+        """create_and_wait_i2v() passes all params to create_i2v_video."""
+        mock_create_i2v.return_value = "vid_2"
+        mock_wait.return_value = {
+            "status": "completed",
+            "video_url": "https://example.com/i2v2.mp4",
+        }
+
+        create_and_wait_i2v("key", "prompt", "data:image/...", duration=10, resolution="720p", ratio="9:16")
+
+        mock_create_i2v.assert_called_once_with("key", "prompt", "data:image/...", 10, "720p", "9:16")

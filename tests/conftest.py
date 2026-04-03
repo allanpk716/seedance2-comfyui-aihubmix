@@ -28,6 +28,16 @@ def mock_pending_response():
 
 
 @pytest.fixture
+def mock_i2v_response():
+    """Return a dict mimicking a completed I2V AIHubMix API response."""
+    return {
+        "id": "vid_i2v_test",
+        "status": "completed",
+        "video_url": "https://example.com/i2v_video.mp4",
+    }
+
+
+@pytest.fixture
 def mock_failed_response():
     """Return a dict mimicking a failed AIHubMix API response."""
     return {

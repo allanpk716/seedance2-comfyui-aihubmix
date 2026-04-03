@@ -135,6 +135,46 @@ def wait_for_video(api_key, video_id, poll_interval=5, max_wait=600):
     return data
 
 
+def create_i2v_video(api_key, prompt, image_data_uri, duration=5, resolution="1080p", ratio="16:9"):
+    """Submit an I2V task with image reference. Returns video ID string."""
+    headers = _get_headers(api_key)
+    payload = {
+        "model": MODEL,
+        "prompt": prompt,
+        "seconds": duration,
+        "input": image_data_uri,
+    }
+
+    size = _get_size(resolution, ratio)
+    if size:
+        payload["size"] = size
+
+    resp = requests.post(f"{BASE_URL}/videos", headers=headers, json=payload)
+    _check_response(resp)
+
+    data = resp.json()
+    video_id = data.get("id") or data.get("video_id")
+    if not video_id:
+        raise RuntimeError(f"No video ID in response: {data}")
+
+    return video_id
+
+
+def create_and_wait_i2v(api_key, prompt, image_data_uri, duration=5, resolution="1080p", ratio="16:9"):
+    """Create I2V video and wait for completion. Returns result dict with video_url and video_id."""
+    video_id = create_i2v_video(api_key, prompt, image_data_uri, duration, resolution, ratio)
+    print(f"[Seedance] I2V video created: {video_id}")
+
+    result = wait_for_video(api_key, video_id)
+    print(f"[Seedance] I2V video completed: {result.get('video_url', 'N/A')}")
+
+    video_url = result.get("video_url") or result.get("url", "")
+    return {
+        "video_url": video_url,
+        "video_id": video_id,
+    }
+
+
 def create_and_wait(api_key, prompt, duration=5, resolution="1080p", ratio="16:9"):
     """Create a video and wait for completion. Returns result dict with video_url and video_id."""
     video_id = create_video(api_key, prompt, duration, resolution, ratio)
