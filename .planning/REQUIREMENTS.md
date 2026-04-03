@@ -50,9 +50,9 @@
 
 ### Omni Reference
 
-- [ ] **OMNI-01**: User can combine multiple images (up to 9) + video URLs (up to 3) + prompt for multi-modal generation
-- [ ] **OMNI-02**: Each image input is converted from ComfyUI tensor to base64 data URI
-- [ ] **OMNI-03**: Node outputs video_url (STRING), first_frame (IMAGE), video_id (STRING)
+- [x] **OMNI-01**: User can combine multiple images (up to 9) + video URLs (up to 3) + prompt for multi-modal generation
+- [x] **OMNI-02**: Each image input is converted from ComfyUI tensor to base64 data URI
+- [x] **OMNI-03**: Node outputs video_url (STRING), first_frame (IMAGE), video_id (STRING)
 
 ### Video Save & Preview
 
@@ -112,9 +112,9 @@
 | EXTD-01 | Phase 3 | Complete |
 | EXTD-02 | Phase 3 | Complete |
 | EXTD-03 | Phase 3 | Complete |
-| OMNI-01 | Phase 3 | Pending |
-| OMNI-02 | Phase 3 | Pending |
-| OMNI-03 | Phase 3 | Pending |
+| OMNI-01 | Phase 3 | Complete |
+| OMNI-02 | Phase 3 | Complete |
+| OMNI-03 | Phase 3 | Complete |
 | VSAV-01 | Phase 2 | Complete |
 | VSAV-02 | Phase 2 | Complete |
 | VSAV-03 | Phase 2 | Complete |

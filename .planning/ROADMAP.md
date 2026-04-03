@@ -66,7 +66,7 @@ Plans:
 
 Plans:
 - [x] 03-01: Build Video Extend node
-- [ ] 03-02: Build Omni Reference node with multi-image and video URL inputs
+- [x] 03-02: Build Omni Reference node with multi-image and video URL inputs
 
 ### Phase 4: Publish
 **Goal**: Users can install the plugin via ComfyUI Manager and get started from a README
