@@ -1,0 +1,4 @@
+seedance_video.py
+.env
+__pycache__/
+*.pyc
