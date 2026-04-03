@@ -62,7 +62,7 @@ Plans:
   3. User can wire up to 9 images and up to 3 video URLs into the Omni Reference node along with a prompt and generate a multi-modal video
   4. Each image input to Omni Reference is correctly converted from ComfyUI tensor to base64 data URI
   5. Both Extend and Omni Reference nodes output video_url, first_frame (IMAGE), and video_id like the other generation nodes
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
 - [x] 03-01: Build Video Extend node
@@ -76,10 +76,10 @@ Plans:
   1. Plugin repository is publicly accessible on GitHub with a README showing installation instructions
   2. User can install the plugin via ComfyUI Manager "Install via Git URL" and all nodes appear after ComfyUI restart
   3. README includes example workflow description showing how to use the basic T2V and I2V nodes
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 04-01: Finalize GitHub repo, write README, verify ComfyUI Manager installation
+- [ ] 04-01-PLAN.md -- Clean up dev artifacts, write bilingual README + LICENSE, create GitHub repo and push
 
 ## Progress
 
