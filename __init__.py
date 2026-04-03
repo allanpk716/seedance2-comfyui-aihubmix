@@ -1,4 +1,4 @@
-from .nodes import SeedanceApiKey, SeedanceTextToVideo, SeedanceImageToVideo, SeedanceSaveVideo, SeedanceExtendVideo
+from .nodes import SeedanceApiKey, SeedanceTextToVideo, SeedanceImageToVideo, SeedanceSaveVideo, SeedanceExtendVideo, SeedanceOmniReference
 
 NODE_CLASS_MAPPINGS = {
     "SeedanceApiKey": SeedanceApiKey,
@@ -6,6 +6,7 @@ NODE_CLASS_MAPPINGS = {
     "SeedanceImageToVideo": SeedanceImageToVideo,
     "SeedanceSaveVideo": SeedanceSaveVideo,
     "SeedanceExtendVideo": SeedanceExtendVideo,
+    "SeedanceOmniReference": SeedanceOmniReference,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -14,6 +15,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SeedanceImageToVideo": "Seedance 2.0 Image to Video",
     "SeedanceSaveVideo": "Seedance 2.0 Save Video",
     "SeedanceExtendVideo": "Seedance 2.0 Video Extend",
+    "SeedanceOmniReference": "Seedance 2.0 Omni Reference",
 }
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

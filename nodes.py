@@ -20,6 +20,7 @@ from PIL import Image
 from .api_client import create_and_wait
 from .api_client import create_and_wait_i2v
 from .api_client import create_and_wait_extend
+from .api_client import create_and_wait_omni
 
 
 class SeedanceApiKey:
@@ -176,6 +177,76 @@ class SeedanceExtendVideo:
         if not video_id:
             raise ValueError("视频ID不能为空。请将视频生成节点的 video_id 输出连接到此节点。")
         result = create_and_wait_extend(api_key, video_id, prompt, duration, resolution, ratio)
+        return (result["video_url"], result["video_id"])
+
+
+class SeedanceOmniReference:
+    """Omni reference video generation node using Seedance 2.0 via AIHubMix.
+
+    Combines up to 9 reference images and up to 3 video URLs with a text prompt
+    for multi-modal video generation per OMNI-01/OMNI-02/OMNI-03.
+    Unconnected image/video slots are silently ignored.
+    """
+
+    CATEGORY = "Seedance 2.0"
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        optional = {
+            "api_key": ("STRING", {"default": ""}),
+            "duration": ("INT", {"default": 5, "min": 4, "max": 15, "step": 1}),
+            "resolution": (["1080p", "720p", "480p"],),
+            "ratio": (["16:9", "9:16", "4:3", "3:4", "1:1", "21:9"],),
+        }
+        for i in range(1, 10):
+            optional[f"image_{i}"] = ("IMAGE",)
+        for i in range(1, 4):
+            optional[f"video_url_{i}"] = ("STRING", {"default": ""})
+        return {
+            "required": {
+                "prompt": ("STRING", {"multiline": True, "default": ""}),
+            },
+            "optional": optional,
+        }
+
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("video_url", "video_id")
+    FUNCTION = "generate"
+    OUTPUT_NODE = False
+
+    def generate(self, prompt, api_key="", duration=5, resolution="1080p", ratio="16:9", **kwargs):
+        if not api_key:
+            raise ValueError(
+                "API key is required. "
+                "Please connect a Seedance 2.0 API Key node or fill in the api_key field. "
+                "You can get your key at aihubmix.com"
+            )
+
+        # Convert connected images to base64 JPEG data URIs per D-13
+        image_data_uris = []
+        for i in range(1, 10):
+            img = kwargs.get(f"image_{i}")
+            if img is not None:
+                image_array = np.clip(img[0].cpu().numpy() * 255, 0, 255).astype(np.uint8)
+                pil_image = Image.fromarray(image_array)
+                buffer = io.BytesIO()
+                pil_image.save(buffer, format="JPEG", quality=95)
+                encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
+                image_data_uris.append(f"data:image/jpeg;base64,{encoded}")
+
+        # Collect connected video URLs (skip empty strings)
+        video_urls = []
+        for i in range(1, 4):
+            url = kwargs.get(f"video_url_{i}", "")
+            if url:
+                video_urls.append(url)
+
+        result = create_and_wait_omni(
+            api_key, prompt,
+            image_data_uris or None,
+            video_urls or None,
+            duration, resolution, ratio,
+        )
         return (result["video_url"], result["video_id"])
 
 

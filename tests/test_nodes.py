@@ -725,3 +725,210 @@ class TestSeedanceExtendVideo:
             "key456", "vid_456", "more action", 10, "720p", "9:16"
         )
         assert result == ("https://example.com/extend2.mp4", "vid_ext_456")
+
+
+class TestSeedanceOmniReference:
+    """Tests for the SeedanceOmniReference node class."""
+
+    def test_omni_prompt_required(self):
+        """SeedanceOmniReference.INPUT_TYPES()['required'] contains 'prompt' as multiline STRING."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        result = SeedanceOmniReference.INPUT_TYPES()
+        assert "required" in result
+        assert "prompt" in result["required"]
+        assert result["required"]["prompt"][0] == "STRING"
+        config = result["required"]["prompt"][1]
+        assert config.get("multiline") is True
+
+    def test_omni_optional_image_inputs(self):
+        """SeedanceOmniReference INPUT_TYPES has image_1 through image_9 as IMAGE type."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        result = SeedanceOmniReference.INPUT_TYPES()
+        assert "optional" in result
+        for i in range(1, 10):
+            assert f"image_{i}" in result["optional"], f"Missing image_{i} in optional inputs"
+            assert result["optional"][f"image_{i}"][0] == "IMAGE"
+
+    def test_omni_optional_video_url_inputs(self):
+        """SeedanceOmniReference INPUT_TYPES has video_url_1 through video_url_3 as STRING type."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        result = SeedanceOmniReference.INPUT_TYPES()
+        assert "optional" in result
+        for i in range(1, 4):
+            assert f"video_url_{i}" in result["optional"], f"Missing video_url_{i} in optional inputs"
+            assert result["optional"][f"video_url_{i}"][0] == "STRING"
+
+    def test_omni_optional_gen_params(self):
+        """SeedanceOmniReference optional has api_key, duration, resolution, ratio with correct types/defaults."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        result = SeedanceOmniReference.INPUT_TYPES()
+        assert result["optional"]["api_key"][0] == "STRING"
+        assert result["optional"]["api_key"][1]["default"] == ""
+        duration = result["optional"]["duration"]
+        assert duration[0] == "INT"
+        assert duration[1]["default"] == 5
+        assert duration[1]["min"] == 4
+        assert duration[1]["max"] == 15
+        resolution = result["optional"]["resolution"]
+        assert "1080p" in resolution[0]
+        assert "720p" in resolution[0]
+        assert "480p" in resolution[0]
+        ratio = result["optional"]["ratio"]
+        expected_ratios = ["16:9", "9:16", "4:3", "3:4", "1:1", "21:9"]
+        for r in expected_ratios:
+            assert r in ratio[0]
+
+    def test_omni_output_types(self):
+        """SeedanceOmniReference.RETURN_TYPES == ('STRING', 'STRING') per D-15."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        assert SeedanceOmniReference.RETURN_TYPES == ("STRING", "STRING")
+
+    def test_omni_output_names(self):
+        """SeedanceOmniReference.RETURN_NAMES == ('video_url', 'video_id') per D-15."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        assert SeedanceOmniReference.RETURN_NAMES == ("video_url", "video_id")
+
+    def test_omni_function(self):
+        """SeedanceOmniReference.FUNCTION == 'generate'."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        assert SeedanceOmniReference.FUNCTION == "generate"
+
+    def test_omni_category(self):
+        """SeedanceOmniReference.CATEGORY == 'Seedance 2.0'."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        assert SeedanceOmniReference.CATEGORY == "Seedance 2.0"
+
+    def test_omni_output_node(self):
+        """SeedanceOmniReference.OUTPUT_NODE == False."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        assert SeedanceOmniReference.OUTPUT_NODE is False
+
+    def test_omni_missing_key_error(self):
+        """Missing API key raises ValueError with aihubmix guidance."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        node = SeedanceOmniReference()
+        with pytest.raises(ValueError, match="(?i)api.key|aihubmix"):
+            node.generate(prompt="test", api_key="")
+
+    @patch("seedance_comfyui.nodes.create_and_wait_omni")
+    def test_omni_calls_create_and_wait_omni(self, mock_create_and_wait_omni):
+        """Omni node calls create_and_wait_omni with correct args when no images/videos."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        mock_create_and_wait_omni.return_value = {
+            "video_url": "https://example.com/omni.mp4",
+            "video_id": "vid_omni_123",
+        }
+
+        node = SeedanceOmniReference()
+        result = node.generate(prompt="test", api_key="key123")
+
+        mock_create_and_wait_omni.assert_called_once_with(
+            "key123", "test", None, None, 5, "1080p", "16:9"
+        )
+        assert result == ("https://example.com/omni.mp4", "vid_omni_123")
+
+    @patch("seedance_comfyui.nodes.create_and_wait_omni")
+    def test_omni_with_single_image(self, mock_create_and_wait_omni):
+        """Omni node converts single image tensor to data URI in image_data_uris list."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        mock_create_and_wait_omni.return_value = {
+            "video_url": "https://example.com/omni.mp4",
+            "video_id": "vid_omni_456",
+        }
+
+        node = SeedanceOmniReference()
+        result = node.generate(
+            prompt="test", api_key="key123",
+            image_1=torch.rand(1, 2, 2, 3),
+        )
+
+        call_args = mock_create_and_wait_omni.call_args[0]
+        image_data_uris = call_args[2]
+        assert image_data_uris is not None
+        assert len(image_data_uris) == 1
+        assert image_data_uris[0].startswith("data:image/jpeg;base64,")
+
+    @patch("seedance_comfyui.nodes.create_and_wait_omni")
+    def test_omni_with_multiple_images(self, mock_create_and_wait_omni):
+        """Omni node collects image_1 and image_3 (skipping unconnected image_2) into 2 data URIs."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        mock_create_and_wait_omni.return_value = {
+            "video_url": "https://example.com/omni.mp4",
+            "video_id": "vid_omni_789",
+        }
+
+        node = SeedanceOmniReference()
+        result = node.generate(
+            prompt="test", api_key="key123",
+            image_1=torch.rand(1, 2, 2, 3),
+            image_3=torch.rand(1, 2, 2, 3),
+        )
+
+        call_args = mock_create_and_wait_omni.call_args[0]
+        image_data_uris = call_args[2]
+        assert image_data_uris is not None
+        assert len(image_data_uris) == 2
+        for uri in image_data_uris:
+            assert uri.startswith("data:image/jpeg;base64,")
+
+    @patch("seedance_comfyui.nodes.create_and_wait_omni")
+    def test_omni_with_video_urls(self, mock_create_and_wait_omni):
+        """Omni node collects video_url_1 and video_url_3, skipping empty video_url_2."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        mock_create_and_wait_omni.return_value = {
+            "video_url": "https://example.com/omni.mp4",
+            "video_id": "vid_omni_v1",
+        }
+
+        node = SeedanceOmniReference()
+        result = node.generate(
+            prompt="test", api_key="key123",
+            video_url_1="https://example.com/v1.mp4",
+            video_url_3="https://example.com/v3.mp4",
+        )
+
+        call_args = mock_create_and_wait_omni.call_args[0]
+        video_urls = call_args[3]
+        assert video_urls is not None
+        assert len(video_urls) == 2
+        assert "https://example.com/v1.mp4" in video_urls
+        assert "https://example.com/v3.mp4" in video_urls
+
+    @patch("seedance_comfyui.nodes.create_and_wait_omni")
+    def test_omni_with_images_and_videos(self, mock_create_and_wait_omni):
+        """Omni node sends both image_data_uris and video_urls when both are provided."""
+        from seedance_comfyui.nodes import SeedanceOmniReference
+
+        mock_create_and_wait_omni.return_value = {
+            "video_url": "https://example.com/omni_combined.mp4",
+            "video_id": "vid_omni_combo",
+        }
+
+        node = SeedanceOmniReference()
+        result = node.generate(
+            prompt="combined test", api_key="key123",
+            image_1=torch.rand(1, 2, 2, 3),
+            video_url_1="https://example.com/ref.mp4",
+        )
+
+        call_args = mock_create_and_wait_omni.call_args[0]
+        image_data_uris = call_args[2]
+        video_urls = call_args[3]
+        assert image_data_uris is not None
+        assert len(image_data_uris) == 1
+        assert video_urls is not None
+        assert len(video_urls) == 1
