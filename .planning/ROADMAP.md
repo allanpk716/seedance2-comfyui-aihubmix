@@ -46,11 +46,11 @@ Plans:
   3. User can download a generated video via the Save Video node and the file appears in the ComfyUI output directory
   4. Save Video node extracts frames and returns them as a ComfyUI IMAGE tensor that can be previewed or passed to downstream nodes
   5. User can configure filename prefix and save subfolder for organized output
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: Build Image-to-Video node with tensor-to-base64 conversion
-- [ ] 02-02: Build Video Save node with download, frame extraction, and preview
+- [ ] 02-01-PLAN.md -- I2V API client functions + SeedanceImageToVideo node with tensor-to-base64 conversion (TDD)
+- [ ] 02-02-PLAN.md -- SeedanceSaveVideo OUTPUT_NODE with download, frame extraction, and UI preview (TDD)
 
 ### Phase 3: Extend + Omni Reference
 **Goal**: Users can extend previously generated videos and combine multiple images/videos into multi-modal generation requests
@@ -89,6 +89,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Text-to-Video | 0/3 | Planning complete | - |
-| 2. Image-to-Video + Video Saver | 0/2 | Not started | - |
+| 2. Image-to-Video + Video Saver | 0/2 | Planning complete | - |
 | 3. Extend + Omni Reference | 0/2 | Not started | - |
 | 4. Publish | 0/1 | Not started | - |
