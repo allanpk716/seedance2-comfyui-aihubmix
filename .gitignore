@@ -1,6 +1,37 @@
+# Dev test script
 seedance_video.py
+
+# Environment and secrets
 .env
+.env.*
+
+# Python artifacts
 __pycache__/
-*.pyc
-=4.7
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Artifact files from pip typos
+=*
+
+# Dev/planning (not for published repo)
+.planning/
+.omc/
+.claude/
+CLAUDE.md
 .no-windows
+.pytest_cache/
