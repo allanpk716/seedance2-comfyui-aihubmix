@@ -358,11 +358,15 @@ class TestSeedanceSaveVideo:
         assert result["required"]["video_url"][0] == "STRING"
 
     def test_save_optional_fields(self):
-        """SeedanceSaveVideo optional fields: filename_prefix, subfolder, frame_load_cap."""
+        """SeedanceSaveVideo optional fields: api_key, filename_prefix, subfolder, frame_load_cap."""
         from seedance_comfyui.nodes import SeedanceSaveVideo
 
         result = SeedanceSaveVideo.INPUT_TYPES()
         assert "optional" in result
+
+        ak = result["optional"]["api_key"]
+        assert ak[0] == "STRING"
+        assert ak[1]["default"] == ""
 
         fp = result["optional"]["filename_prefix"]
         assert fp[0] == "STRING"
@@ -434,15 +438,38 @@ class TestSeedanceSaveVideo:
             node = SeedanceSaveVideo()
             result = node.save(video_url="https://example.com/video.mp4")
 
-            # Verify requests.get called with stream=True
+            # Verify requests.get called with stream=True and no auth headers (no api_key)
             mock_get.assert_called_once()
             call_kwargs = mock_get.call_args
             assert call_kwargs[1].get("stream") is True or (len(call_kwargs) > 1 and call_kwargs[1].get("stream") is True)
+            assert "headers" not in call_kwargs[1] or not call_kwargs[1]["headers"]
 
             # Verify an .mp4 file was written to the output directory
             output_dir = mock_folder_paths.get_output_directory()
             mp4_files = [f for f in os.listdir(output_dir) if f.endswith(".mp4")]
             assert len(mp4_files) >= 1
+
+    def test_save_downloads_with_auth(self, mock_folder_paths, mock_video_bytes, tmp_path):
+        """save() passes Bearer auth header when api_key is provided."""
+        from seedance_comfyui.nodes import SeedanceSaveVideo
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_content = MagicMock(return_value=[mock_video_bytes])
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("seedance_comfyui.nodes.requests.get", return_value=mock_resp) as mock_get:
+            node = SeedanceSaveVideo()
+            result = node.save(
+                video_url="https://aihubmix.com/v1/videos/test123/content",
+                api_key="sk-test-key",
+            )
+
+            mock_get.assert_called_once()
+            call_kwargs = mock_get.call_args[1]
+            assert call_kwargs["headers"]["Authorization"] == "Bearer sk-test-key"
 
     def test_save_extracts_frames(self, mock_folder_paths, mock_video_bytes, tmp_path):
         """save() extracts frames as ComfyUI IMAGE tensor (N,H,W,C float32 [0,1])."""

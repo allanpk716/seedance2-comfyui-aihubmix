@@ -269,6 +269,7 @@ class SeedanceSaveVideo:
                 "video_url": ("STRING", {"default": ""}),
             },
             "optional": {
+                "api_key": ("STRING", {"default": ""}),
                 "filename_prefix": ("STRING", {"default": "Seedance"}),
                 "subfolder": ("STRING", {"default": ""}),
                 "frame_load_cap": ("INT", {"default": 16, "min": 1, "max": 1000}),
@@ -279,7 +280,7 @@ class SeedanceSaveVideo:
     RETURN_NAMES = ("frames", "first_frame_path", "video_path")
     FUNCTION = "save"
 
-    def save(self, video_url, filename_prefix="Seedance", subfolder="", frame_load_cap=16):
+    def save(self, video_url, api_key="", filename_prefix="Seedance", subfolder="", frame_load_cap=16):
         # Validate video_url per D-08 Chinese error convention
         if not video_url:
             raise ValueError("视频链接不能为空。请将视频生成节点连接到此节点。")
@@ -295,9 +296,12 @@ class SeedanceSaveVideo:
         video_filename = f"{filename_prefix}_{unique_id}.mp4"
         video_path = os.path.join(target_dir, video_filename)
 
-        # Download video via streaming
+        # Download video via streaming with auth if api_key provided
         print(f"[Seedance] Downloading video to {video_path}...")
-        resp = requests.get(video_url, stream=True, timeout=300)
+        headers = {}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        resp = requests.get(video_url, headers=headers, stream=True, timeout=300)
         resp.raise_for_status()
         with open(video_path, "wb") as f:
             for chunk in resp.iter_content(chunk_size=8192):
