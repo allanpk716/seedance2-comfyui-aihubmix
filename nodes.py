@@ -4,11 +4,17 @@ Provides node classes:
 - SeedanceApiKey: Passthrough node for wiring API keys to generation nodes.
 - SeedanceTextToVideo: Text-to-video generation via AIHubMix API.
 - SeedanceImageToVideo: Image-to-video generation with reference image input.
+- SeedanceSaveVideo: OUTPUT_NODE that downloads video, extracts frames, and previews.
 """
 import base64
 import io
+import os
+import uuid
 
+import cv2
 import numpy as np
+import requests
+import torch
 from PIL import Image
 
 from .api_client import create_and_wait
@@ -128,3 +134,91 @@ class SeedanceImageToVideo:
 
         result = create_and_wait_i2v(api_key, prompt, data_uri, duration, resolution, ratio)
         return (result["video_url"], result["video_id"])
+
+
+class SeedanceSaveVideo:
+    """OUTPUT_NODE that downloads a generated video, extracts frames as ComfyUI IMAGE tensors,
+    saves the first frame as PNG, and returns a UI preview dict for the ComfyUI canvas.
+
+    Per D-12: RETURN_TYPES = (IMAGE, STRING, STRING), OUTPUT_NODE = True.
+    Per D-12a: frame_load_cap defaults to 16 to prevent OOM.
+    Per D-12c: Returns dict with "ui" key for canvas preview.
+    """
+
+    CATEGORY = "Seedance 2.0"
+    OUTPUT_NODE = True
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "video_url": ("STRING", {"default": ""}),
+            },
+            "optional": {
+                "filename_prefix": ("STRING", {"default": "Seedance"}),
+                "subfolder": ("STRING", {"default": ""}),
+                "frame_load_cap": ("INT", {"default": 16, "min": 1, "max": 1000}),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE", "STRING", "STRING")
+    RETURN_NAMES = ("frames", "first_frame_path", "video_path")
+    FUNCTION = "save"
+
+    def save(self, video_url, filename_prefix="Seedance", subfolder="", frame_load_cap=16):
+        # Validate video_url per D-08 Chinese error convention
+        if not video_url:
+            raise ValueError("视频链接不能为空。请将视频生成节点连接到此节点。")
+
+        # Resolve output directory (import here to allow mocking in tests)
+        import folder_paths
+        output_dir = folder_paths.get_output_directory()
+        target_dir = os.path.join(output_dir, subfolder) if subfolder else output_dir
+        os.makedirs(target_dir, exist_ok=True)
+
+        # Generate unique filename
+        unique_id = uuid.uuid4().hex[:8]
+        video_filename = f"{filename_prefix}_{unique_id}.mp4"
+        video_path = os.path.join(target_dir, video_filename)
+
+        # Download video via streaming
+        print(f"[Seedance] Downloading video to {video_path}...")
+        resp = requests.get(video_url, stream=True, timeout=300)
+        resp.raise_for_status()
+        with open(video_path, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=8192):
+                f.write(chunk)
+
+        # Extract frames via cv2.VideoCapture
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            raise RuntimeError(f"无法打开视频文件: {video_path}")
+
+        frames = []
+        while len(frames) < frame_load_cap:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            # Convert BGR to RGB and normalize to float32 [0, 1]
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame_float = frame_rgb.astype(np.float32) / 255.0
+            frames.append(frame_float)
+        cap.release()
+
+        if not frames:
+            raise RuntimeError("未能从视频中提取任何帧")
+
+        # Build frames tensor (N, H, W, C) float32 [0, 1]
+        frames_tensor = torch.from_numpy(np.stack(frames, axis=0))
+
+        # Save first frame as PNG
+        first_frame_uint8 = (frames[0] * 255).astype(np.uint8)
+        first_frame_filename = f"{filename_prefix}_{unique_id}_first_frame.png"
+        first_frame_path = os.path.join(target_dir, first_frame_filename)
+        Image.fromarray(first_frame_uint8).save(first_frame_path)
+
+        # Build return dict per ComfyUI OUTPUT_NODE format
+        return {
+            "ui": {"images": [{"filename": video_filename, "subfolder": subfolder, "type": "output"}]},
+            "result": (frames_tensor, first_frame_path, video_path),
+        }
