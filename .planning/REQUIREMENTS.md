@@ -56,10 +56,10 @@
 
 ### Video Save & Preview
 
-- [ ] **VSAV-01**: Save Video node downloads generated video from URL to ComfyUI output directory
-- [ ] **VSAV-02**: Node extracts frames and returns as ComfyUI IMAGE tensor with frame_load_cap to prevent OOM
-- [ ] **VSAV-03**: Video preview displays in ComfyUI UI canvas (OUTPUT_NODE with gifs preview)
-- [ ] **VSAV-04**: User can configure filename prefix and save subfolder
+- [x] **VSAV-01**: Save Video node downloads generated video from URL to ComfyUI output directory
+- [x] **VSAV-02**: Node extracts frames and returns as ComfyUI IMAGE tensor with frame_load_cap to prevent OOM
+- [x] **VSAV-03**: Video preview displays in ComfyUI UI canvas (OUTPUT_NODE with gifs preview)
+- [x] **VSAV-04**: User can configure filename prefix and save subfolder
 
 ## v2 Requirements
 
@@ -115,10 +115,10 @@
 | OMNI-01 | Phase 3 | Pending |
 | OMNI-02 | Phase 3 | Pending |
 | OMNI-03 | Phase 3 | Pending |
-| VSAV-01 | Phase 2 | Pending |
-| VSAV-02 | Phase 2 | Pending |
-| VSAV-03 | Phase 2 | Pending |
-| VSAV-04 | Phase 2 | Pending |
+| VSAV-01 | Phase 2 | Complete |
+| VSAV-02 | Phase 2 | Complete |
+| VSAV-03 | Phase 2 | Complete |
+| VSAV-04 | Phase 2 | Complete |
 
 **Coverage:**
 - v1 requirements: 30 total

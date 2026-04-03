@@ -13,7 +13,7 @@ Build a ComfyUI custom node plugin that integrates ByteDance's Seedance 2.0 vide
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation + Text-to-Video** - Plugin scaffolding, API client, key management, and T2V node working end-to-end
-- [ ] **Phase 2: Image-to-Video + Video Saver** - I2V node with image tensor conversion, and video download/preview node
+- [x] **Phase 2: Image-to-Video + Video Saver** - I2V node with image tensor conversion, and video download/preview node (completed 2026-04-03)
 - [ ] **Phase 3: Extend + Omni Reference** - Video extend and multi-modal omni reference nodes
 - [ ] **Phase 4: Publish** - GitHub repository setup, README, ComfyUI Manager compatibility verification
 
@@ -49,8 +49,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- I2V API client functions + SeedanceImageToVideo node with tensor-to-base64 conversion (TDD)
-- [ ] 02-02-PLAN.md -- SeedanceSaveVideo OUTPUT_NODE with download, frame extraction, and UI preview (TDD)
+- [x] 02-01-PLAN.md -- I2V API client functions + SeedanceImageToVideo node with tensor-to-base64 conversion (TDD)
+- [x] 02-02-PLAN.md -- SeedanceSaveVideo OUTPUT_NODE with download, frame extraction, and UI preview (TDD)
 
 ### Phase 3: Extend + Omni Reference
 **Goal**: Users can extend previously generated videos and combine multiple images/videos into multi-modal generation requests
@@ -89,6 +89,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Text-to-Video | 0/3 | Planning complete | - |
-| 2. Image-to-Video + Video Saver | 0/2 | Planning complete | - |
+| 2. Image-to-Video + Video Saver | 2/2 | Complete   | 2026-04-03 |
 | 3. Extend + Omni Reference | 0/2 | Not started | - |
 | 4. Publish | 0/1 | Not started | - |
