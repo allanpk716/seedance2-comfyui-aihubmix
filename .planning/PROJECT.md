@@ -16,16 +16,15 @@ Users can generate Seedance 2.0 AI videos directly inside ComfyUI by entering th
 - API Key Node: Dedicated node for entering AIHubMix API key, passed to generation nodes (Validated in Phase 1)
 - ComfyUI Manager Compatible: Proper `__init__.py` registration for ComfyUI discovery (Validated in Phase 1)
 
-### Active
-
-- [ ] Video Extend: User can extend a previously generated video using the request ID
-- [ ] Omni Reference: User can combine multiple images, video URLs, and audio URLs for generation
-- [ ] GitHub Repository: Published on GitHub with README for ComfyUI Manager installation
-
 ### Validated (Phase 2)
 
 - Image-to-Video: User provides reference image + prompt to generate video via AIHubMix I2V endpoint (Validated in Phase 2: Image-to-Video + Video Saver)
 - Video Save/Download: SeedanceSaveVideo OUTPUT_NODE downloads video, extracts frames as IMAGE tensors, saves first frame PNG, returns UI preview (Validated in Phase 2)
+
+### Validated (Phase 3)
+
+- Video Extend: SeedanceExtendVideo node accepts video_id from prior generation + optional continuation prompt, outputs (video_url, video_id) (Validated in Phase 3: Extend + Omni Reference)
+- Omni Reference: SeedanceOmniReference node with 9 optional IMAGE + 3 optional STRING video URL inputs for multi-modal generation (Validated in Phase 3)
 
 ### Out of Scope
 
@@ -96,4 +95,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-03 after Phase 2 completion*
+*Last updated: 2026-04-03 after Phase 3 completion*
