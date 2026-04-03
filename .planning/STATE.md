@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-04-03T05:45:06.969Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-04-03T05:45:35.079Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 4
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 3min | 1 tasks | 6 files |
+| Phase 01 P02 | 3min | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - [Init]: Inline base64 for images instead of separate upload step
 - [Phase 01]: Used sys.path manipulation in tests to import seedance_comfyui as proper package for relative imports
 - [Phase 01]: Included all four dependencies in requirements.txt matching reference project convention
+- [Phase 01]: Function-based API client module (not class) for simplicity and testability
+- [Phase 01]: Chinese error messages for 401/402/429 per D-08, max_wait=600s polling timeout
 
 ### Pending Todos
 
@@ -78,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T05:44:49.184Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-04-03T05:45:35.074Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None

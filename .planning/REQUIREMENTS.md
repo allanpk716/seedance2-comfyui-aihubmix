@@ -16,11 +16,11 @@
 
 ### API Client
 
-- [ ] **APIC-01**: API client module handles all AIHubMix HTTP communication (`POST /v1/videos`, `GET /v1/videos/{id}`, `GET /v1/videos/{id}/content`)
-- [ ] **APIC-02**: Authentication uses `Authorization: Bearer {key}` header
-- [ ] **APIC-03**: API client polls for video completion every 5 seconds with progress logging to console
-- [ ] **APIC-04**: Error handling provides clear messages for 401 (auth), 402 (credits), 429 (rate limit), network failures
-- [ ] **APIC-05**: Model identifier `doubao-seedance-2-0-260128` is used for all requests
+- [x] **APIC-01**: API client module handles all AIHubMix HTTP communication (`POST /v1/videos`, `GET /v1/videos/{id}`, `GET /v1/videos/{id}/content`)
+- [x] **APIC-02**: Authentication uses `Authorization: Bearer {key}` header
+- [x] **APIC-03**: API client polls for video completion every 5 seconds with progress logging to console
+- [x] **APIC-04**: Error handling provides clear messages for 401 (auth), 402 (credits), 429 (rate limit), network failures
+- [x] **APIC-05**: Model identifier `doubao-seedance-2-0-260128` is used for all requests
 
 ### API Key Management
 
@@ -93,11 +93,11 @@
 | PFND-02 | Phase 1 | Complete |
 | PFND-03 | Phase 1 | Complete |
 | PFND-04 | Phase 4 | Pending |
-| APIC-01 | Phase 1 | Pending |
-| APIC-02 | Phase 1 | Pending |
-| APIC-03 | Phase 1 | Pending |
-| APIC-04 | Phase 1 | Pending |
-| APIC-05 | Phase 1 | Pending |
+| APIC-01 | Phase 1 | Complete |
+| APIC-02 | Phase 1 | Complete |
+| APIC-03 | Phase 1 | Complete |
+| APIC-04 | Phase 1 | Complete |
+| APIC-05 | Phase 1 | Complete |
 | KEYM-01 | Phase 1 | Pending |
 | KEYM-02 | Phase 1 | Pending |
 | KEYM-03 | Phase 1 | Pending |
