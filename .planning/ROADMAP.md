@@ -29,12 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can type a text prompt, select resolution/aspect ratio/duration, and trigger video generation that completes with a video URL returned
   4. Invalid or missing API key produces a clear error message telling the user what to do
   5. API errors (auth failure, insufficient credits, rate limit, network) show human-readable messages in the ComfyUI console
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Fork reference project, strip muapi.ai code, set up 4-file structure with __init__.py registration
-- [ ] 01-02: Build AIHubMix API client module (auth, create, poll, error handling)
-- [ ] 01-03: Build API Key node and Text-to-Video node with all parameters
+- [ ] 01-01-PLAN.md -- Plugin scaffold with __init__.py registration, requirements.txt, test infrastructure
+- [ ] 01-02-PLAN.md -- AIHubMix API client module with create, poll, error handling (mocked tests)
+- [ ] 01-03-PLAN.md -- API Key node and Text-to-Video node with all parameters (TDD)
 
 ### Phase 2: Image-to-Video + Video Saver
 **Goal**: Users can generate videos from reference images and download/preview the results as ComfyUI tensors
@@ -88,7 +88,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Text-to-Video | 0/3 | Not started | - |
+| 1. Foundation + Text-to-Video | 0/3 | Planning complete | - |
 | 2. Image-to-Video + Video Saver | 0/2 | Not started | - |
 | 3. Extend + Omni Reference | 0/2 | Not started | - |
 | 4. Publish | 0/1 | Not started | - |
