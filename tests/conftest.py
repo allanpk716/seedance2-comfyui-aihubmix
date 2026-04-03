@@ -54,6 +54,16 @@ def mock_extend_response():
 
 
 @pytest.fixture
+def mock_omni_response():
+    """Return a dict mimicking a completed Omni Reference AIHubMix API response."""
+    return {
+        "id": "vid_omni_test",
+        "status": "completed",
+        "video_url": "https://example.com/omni_video.mp4",
+    }
+
+
+@pytest.fixture
 def mock_failed_response():
     """Return a dict mimicking a failed AIHubMix API response."""
     return {

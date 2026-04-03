@@ -7,10 +7,12 @@ from api_client import (
     create_video,
     create_i2v_video,
     create_extend_video,
+    create_omni_video,
     wait_for_video,
     create_and_wait,
     create_and_wait_i2v,
     create_and_wait_extend,
+    create_and_wait_omni,
     _check_response,
     SIZE_MAP,
     MODEL,
@@ -458,3 +460,140 @@ class TestCreateAndWaitExtend:
         create_and_wait_extend("key", "vid_orig", "more", duration=10, resolution="720p", ratio="9:16")
 
         mock_create_extend.assert_called_once_with("key", "vid_orig", "more", 10, "720p", "9:16")
+
+
+class TestCreateOmniVideo:
+    """Tests for the create_omni_video function."""
+
+    @patch("api_client.requests.post")
+    def test_omni_payload_with_images(self, mock_post):
+        """create_omni_video() sends payload with 'input' field containing list of data URIs."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_omni_test"}
+        mock_post.return_value = mock_resp
+
+        create_omni_video("key", "test prompt", image_data_uris=["data:image/jpeg;base64,abc", "data:image/jpeg;base64,def"])
+
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["input"] == ["data:image/jpeg;base64,abc", "data:image/jpeg;base64,def"]
+
+    @patch("api_client.requests.post")
+    def test_omni_payload_with_videos(self, mock_post):
+        """create_omni_video() sends payload with 'video_urls' field containing list of URLs."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_omni_test"}
+        mock_post.return_value = mock_resp
+
+        create_omni_video("key", "test prompt", video_urls=["https://example.com/v1.mp4"])
+
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["video_urls"] == ["https://example.com/v1.mp4"]
+
+    @patch("api_client.requests.post")
+    def test_omni_payload_no_images_no_videos(self, mock_post):
+        """create_omni_video() with no images/videos does NOT include 'input' or 'video_urls' keys."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_omni_test"}
+        mock_post.return_value = mock_resp
+
+        create_omni_video("key", "test prompt")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert "input" not in call_json
+        assert "video_urls" not in call_json
+
+    @patch("api_client.requests.post")
+    def test_omni_model_id(self, mock_post):
+        """create_omni_video() sends payload with correct model identifier."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_omni_test"}
+        mock_post.return_value = mock_resp
+
+        create_omni_video("key", "test prompt")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["model"] == "doubao-seedance-2-0-260128"
+
+    @patch("api_client.requests.post")
+    def test_omni_returns_video_id(self, mock_post):
+        """create_omni_video() returns video_id string from response."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_omni_test"}
+        mock_post.return_value = mock_resp
+
+        result = create_omni_video("key", "test prompt")
+
+        assert result == "vid_omni_test"
+
+    @patch("api_client.requests.post")
+    def test_omni_size_720p(self, mock_post):
+        """create_omni_video() with resolution='720p' ratio='16:9' includes size='1280x720'."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_omni_test"}
+        mock_post.return_value = mock_resp
+
+        create_omni_video("key", "prompt", resolution="720p", ratio="16:9")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["size"] == "1280x720"
+
+    @patch("api_client.requests.post")
+    def test_omni_size_1080p_omitted(self, mock_post):
+        """create_omni_video() with resolution='1080p' does NOT include 'size' in payload."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {"id": "vid_omni_test"}
+        mock_post.return_value = mock_resp
+
+        create_omni_video("key", "prompt", resolution="1080p")
+
+        call_json = mock_post.call_args[1]["json"]
+        assert "size" not in call_json
+
+
+class TestCreateAndWaitOmni:
+    """Tests for the create_and_wait_omni orchestration function."""
+
+    @patch("api_client.wait_for_video")
+    @patch("api_client.create_omni_video")
+    def test_orchestrates_correctly(self, mock_create_omni, mock_wait):
+        """create_and_wait_omni() orchestrates create_omni_video + wait_for_video correctly."""
+        mock_create_omni.return_value = "vid_omni_1"
+        mock_wait.return_value = {
+            "status": "completed",
+            "video_url": "https://example.com/omni.mp4",
+        }
+
+        result = create_and_wait_omni("key", "prompt")
+
+        assert result == {"video_url": "https://example.com/omni.mp4", "video_id": "vid_omni_1"}
+
+    @patch("api_client.wait_for_video")
+    @patch("api_client.create_omni_video")
+    def test_passes_all_params(self, mock_create_omni, mock_wait):
+        """create_and_wait_omni() passes all params to create_omni_video."""
+        mock_create_omni.return_value = "vid_omni_2"
+        mock_wait.return_value = {
+            "status": "completed",
+            "video_url": "https://example.com/omni2.mp4",
+        }
+
+        create_and_wait_omni(
+            "key", "prompt",
+            image_data_uris=["data:image/jpeg;base64,abc"],
+            video_urls=["https://example.com/v1.mp4"],
+            duration=10, resolution="720p", ratio="9:16",
+        )
+
+        mock_create_omni.assert_called_once_with(
+            "key", "prompt",
+            ["data:image/jpeg;base64,abc"],
+            ["https://example.com/v1.mp4"],
+            10, "720p", "9:16",
+        )
