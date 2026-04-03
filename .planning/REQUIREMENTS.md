@@ -44,9 +44,9 @@
 
 ### Video Extend
 
-- [ ] **EXTD-01**: User provides video_id from a prior generation + optional continuation prompt
-- [ ] **EXTD-02**: Node outputs video_url (STRING), first_frame (IMAGE), video_id (STRING)
-- [ ] **EXTD-03**: User can select resolution, aspect ratio, and duration same as T2V
+- [x] **EXTD-01**: User provides video_id from a prior generation + optional continuation prompt
+- [x] **EXTD-02**: Node outputs video_url (STRING), first_frame (IMAGE), video_id (STRING)
+- [x] **EXTD-03**: User can select resolution, aspect ratio, and duration same as T2V
 
 ### Omni Reference
 
@@ -109,9 +109,9 @@
 | I2V-02 | Phase 2 | Pending |
 | I2V-03 | Phase 2 | Pending |
 | I2V-04 | Phase 2 | Pending |
-| EXTD-01 | Phase 3 | Pending |
-| EXTD-02 | Phase 3 | Pending |
-| EXTD-03 | Phase 3 | Pending |
+| EXTD-01 | Phase 3 | Complete |
+| EXTD-02 | Phase 3 | Complete |
+| EXTD-03 | Phase 3 | Complete |
 | OMNI-01 | Phase 3 | Pending |
 | OMNI-02 | Phase 3 | Pending |
 | OMNI-03 | Phase 3 | Pending |

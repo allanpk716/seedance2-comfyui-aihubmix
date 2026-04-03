@@ -65,7 +65,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 03-01: Build Video Extend node
+- [x] 03-01: Build Video Extend node
 - [ ] 03-02: Build Omni Reference node with multi-image and video URL inputs
 
 ### Phase 4: Publish

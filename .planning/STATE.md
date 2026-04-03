@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 context gathered
-last_updated: "2026-04-03T12:51:13.672Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-04-03T13:42:29.947Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 7
+  completed_plans: 6
   percent: 0
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-03)
 
 **Core value:** Users can generate Seedance 2.0 AI videos directly inside ComfyUI using their AIHubMix API key
-**Current focus:** Phase 02 — image-to-video-video-saver
+**Current focus:** Phase 03 — extend-omni-reference
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
+Phase: 03 (extend-omni-reference) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
 Last activity: 2026-04-03
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P02 | 3min | 1 tasks | 2 files |
 | Phase 01 P03 | 3min | 1 tasks | 2 files |
 | Phase 02 P02 | 8min | 2 tasks | 5 files |
+| Phase 03 P01 | 4min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Mock patch target must be seedance_comfyui.nodes.create_and_wait (not api_client) because nodes.py imports the function into its own namespace
 - [Phase 01]: Node classes use (STRING, STRING) RETURN_TYPES for video_url + video_id only -- no IMAGE output per D-01
 - [Phase 02]: Lazy import of folder_paths inside save() method for test mockability
+- [Phase 03]: Skipped API verification (auto-mode) -- using MuAPI-compatible request_id payload format for extend
+- [Phase 03]: video_id is required STRING input (not optional) -- prevents accidental empty calls with Chinese error message
+- [Phase 03]: Empty prompt allowed for extend -- user may want pure continuation without new direction
 
 ### Pending Todos
 
@@ -86,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T12:51:13.667Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-extend-omni-reference/03-CONTEXT.md
+Last session: 2026-04-03T13:42:29.942Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
