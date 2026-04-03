@@ -2,3 +2,5 @@ seedance_video.py
 .env
 __pycache__/
 *.pyc
+=4.7
+.no-windows
