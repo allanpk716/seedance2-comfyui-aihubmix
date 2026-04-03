@@ -19,6 +19,7 @@ from PIL import Image
 
 from .api_client import create_and_wait
 from .api_client import create_and_wait_i2v
+from .api_client import create_and_wait_extend
 
 
 class SeedanceApiKey:
@@ -133,6 +134,48 @@ class SeedanceImageToVideo:
         data_uri = f"data:image/jpeg;base64,{encoded}"
 
         result = create_and_wait_i2v(api_key, prompt, data_uri, duration, resolution, ratio)
+        return (result["video_url"], result["video_id"])
+
+
+class SeedanceExtendVideo:
+    """Video extend node using Seedance 2.0 via AIHubMix.
+
+    Accepts a video_id from a prior generation and an optional continuation prompt.
+    The video_id is sent as request_id in the payload to extend the original video.
+    """
+
+    CATEGORY = "Seedance 2.0"
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "video_id": ("STRING", {"default": ""}),
+                "prompt": ("STRING", {"multiline": True, "default": ""}),
+            },
+            "optional": {
+                "api_key": ("STRING", {"default": ""}),
+                "duration": ("INT", {"default": 5, "min": 4, "max": 15, "step": 1}),
+                "resolution": (["1080p", "720p", "480p"],),
+                "ratio": (["16:9", "9:16", "4:3", "3:4", "1:1", "21:9"],),
+            }
+        }
+
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("video_url", "video_id")
+    FUNCTION = "generate"
+    OUTPUT_NODE = False
+
+    def generate(self, video_id, prompt="", api_key="", duration=5, resolution="1080p", ratio="16:9"):
+        if not api_key:
+            raise ValueError(
+                "API key is required. "
+                "Please connect a Seedance 2.0 API Key node or fill in the api_key field. "
+                "You can get your key at aihubmix.com"
+            )
+        if not video_id:
+            raise ValueError("视频ID不能为空。请将视频生成节点的 video_id 输出连接到此节点。")
+        result = create_and_wait_extend(api_key, video_id, prompt, duration, resolution, ratio)
         return (result["video_url"], result["video_id"])
 
 

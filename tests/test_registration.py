@@ -39,7 +39,7 @@ class TestNodeClassMappings:
         mappings = mod.NODE_CLASS_MAPPINGS
         assert isinstance(mappings, dict), "NODE_CLASS_MAPPINGS must be a dict"
 
-        expected_keys = {"SeedanceApiKey", "SeedanceTextToVideo", "SeedanceImageToVideo", "SeedanceSaveVideo"}
+        expected_keys = {"SeedanceApiKey", "SeedanceTextToVideo", "SeedanceImageToVideo", "SeedanceSaveVideo", "SeedanceExtendVideo"}
         assert set(mappings.keys()) == expected_keys, (
             f"NODE_CLASS_MAPPINGS keys must be {expected_keys}, got {set(mappings.keys())}"
         )
@@ -59,7 +59,7 @@ class TestNodeDisplayNameMappings:
         mappings = mod.NODE_DISPLAY_NAME_MAPPINGS
         assert isinstance(mappings, dict), "NODE_DISPLAY_NAME_MAPPINGS must be a dict"
 
-        expected_keys = {"SeedanceApiKey", "SeedanceTextToVideo", "SeedanceImageToVideo", "SeedanceSaveVideo"}
+        expected_keys = {"SeedanceApiKey", "SeedanceTextToVideo", "SeedanceImageToVideo", "SeedanceSaveVideo", "SeedanceExtendVideo"}
         assert set(mappings.keys()) == expected_keys, (
             f"NODE_DISPLAY_NAME_MAPPINGS keys must be {expected_keys}, got {set(mappings.keys())}"
         )

@@ -588,3 +588,140 @@ class TestSeedanceSaveVideo:
             video_path = result["result"][2]
             assert "test_sub" in video_path
             assert os.path.exists(video_path)
+
+
+class TestSeedanceExtendVideo:
+    """Tests for the SeedanceExtendVideo node class."""
+
+    def test_extend_video_id_required(self):
+        """SeedanceExtendVideo.INPUT_TYPES()['required'] contains 'video_id' as STRING type."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        result = SeedanceExtendVideo.INPUT_TYPES()
+        assert "required" in result
+        assert "video_id" in result["required"]
+        assert result["required"]["video_id"][0] == "STRING"
+
+    def test_extend_prompt_required(self):
+        """SeedanceExtendVideo.INPUT_TYPES()['required'] contains 'prompt' as multiline STRING."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        result = SeedanceExtendVideo.INPUT_TYPES()
+        assert "prompt" in result["required"]
+        assert result["required"]["prompt"][0] == "STRING"
+        config = result["required"]["prompt"][1]
+        assert config.get("multiline") is True
+
+    def test_extend_optional_fields(self):
+        """SeedanceExtendVideo optional fields match T2V/I2V pattern."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        result = SeedanceExtendVideo.INPUT_TYPES()
+        assert "optional" in result
+        assert result["optional"]["api_key"][0] == "STRING"
+        duration = result["optional"]["duration"]
+        assert duration[0] == "INT"
+        assert duration[1]["default"] == 5
+        assert duration[1]["min"] == 4
+        assert duration[1]["max"] == 15
+        resolution = result["optional"]["resolution"]
+        assert "1080p" in resolution[0]
+        assert "720p" in resolution[0]
+        assert "480p" in resolution[0]
+        ratio = result["optional"]["ratio"]
+        expected_ratios = ["16:9", "9:16", "4:3", "3:4", "1:1", "21:9"]
+        for r in expected_ratios:
+            assert r in ratio[0]
+
+    def test_extend_output_types(self):
+        """SeedanceExtendVideo.RETURN_TYPES == ('STRING', 'STRING') per D-15."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        assert SeedanceExtendVideo.RETURN_TYPES == ("STRING", "STRING")
+
+    def test_extend_output_names(self):
+        """SeedanceExtendVideo.RETURN_NAMES == ('video_url', 'video_id') per D-15."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        assert SeedanceExtendVideo.RETURN_NAMES == ("video_url", "video_id")
+
+    def test_extend_function(self):
+        """SeedanceExtendVideo.FUNCTION == 'generate'."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        assert SeedanceExtendVideo.FUNCTION == "generate"
+
+    def test_extend_category(self):
+        """SeedanceExtendVideo.CATEGORY == 'Seedance 2.0'."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        assert SeedanceExtendVideo.CATEGORY == "Seedance 2.0"
+
+    def test_extend_output_node(self):
+        """SeedanceExtendVideo.OUTPUT_NODE == False."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        assert SeedanceExtendVideo.OUTPUT_NODE is False
+
+    def test_extend_missing_key_error(self):
+        """Missing API key raises ValueError with aihubmix guidance."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        node = SeedanceExtendVideo()
+        with pytest.raises(ValueError, match="(?i)api.key|aihubmix"):
+            node.generate(video_id="vid_123", prompt="test", api_key="")
+
+    def test_extend_missing_video_id_error(self):
+        """Empty video_id raises ValueError with Chinese error message."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        node = SeedanceExtendVideo()
+        with pytest.raises(ValueError, match="视频|ID|不能为空"):
+            node.generate(video_id="", prompt="test", api_key="key123")
+
+    @patch("seedance_comfyui.nodes.create_and_wait_extend")
+    def test_extend_calls_create_and_wait_extend(self, mock_create_and_wait_extend):
+        """Extend node calls create_and_wait_extend with correct args, returns (video_url, video_id)."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        mock_create_and_wait_extend.return_value = {
+            "video_url": "https://example.com/extend.mp4",
+            "video_id": "vid_ext_123",
+        }
+
+        node = SeedanceExtendVideo()
+        result = node.generate(
+            video_id="vid_123",
+            prompt="continue",
+            api_key="key123",
+        )
+
+        mock_create_and_wait_extend.assert_called_once_with(
+            "key123", "vid_123", "continue", 5, "1080p", "16:9"
+        )
+        assert result == ("https://example.com/extend.mp4", "vid_ext_123")
+
+    @patch("seedance_comfyui.nodes.create_and_wait_extend")
+    def test_extend_size_options(self, mock_create_and_wait_extend):
+        """Extend node passes resolution and ratio through to create_and_wait_extend."""
+        from seedance_comfyui.nodes import SeedanceExtendVideo
+
+        mock_create_and_wait_extend.return_value = {
+            "video_url": "https://example.com/extend2.mp4",
+            "video_id": "vid_ext_456",
+        }
+
+        node = SeedanceExtendVideo()
+        result = node.generate(
+            video_id="vid_456",
+            prompt="more action",
+            api_key="key456",
+            duration=10,
+            resolution="720p",
+            ratio="9:16",
+        )
+
+        mock_create_and_wait_extend.assert_called_once_with(
+            "key456", "vid_456", "more action", 10, "720p", "9:16"
+        )
+        assert result == ("https://example.com/extend2.mp4", "vid_ext_456")
